@@ -1,0 +1,6 @@
+  CREATE_STREAM @200000.000ns {NAME:CSR_in_agent_default_sequence T:Transactions SCOPE:uvm_test_top.env.u_CSR_in_agent.sqr STREAM:2659}
+  CREATE_STREAM @200000.000ns {NAME:Mem_in_agent_default_sequence T:Transactions SCOPE:uvm_test_top.env.u_Mem_in_agent.sqr STREAM:2662}
+  CREATE_STREAM @200000.000ns {NAME:Redirect_in_agent_default_sequence T:Transactions SCOPE:uvm_test_top.env.u_Redirect_in_agent.sqr STREAM:2665}
+  CREATE_STREAM @200000.000ns {NAME:Rob_output_agent_default_sequence T:Transactions SCOPE:uvm_test_top.env.u_Rob_output_agent.sqr STREAM:2668}
+  CREATE_STREAM @200000.000ns {NAME:WriteBack_in_agent_default_sequence T:Transactions SCOPE:uvm_test_top.env.u_WriteBack_in_agent.sqr STREAM:2671}
+  CREATE_STREAM @200000.000ns {NAME:`seq_rename_in(tc_sanity) T:Transactions SCOPE:uvm_test_top.env.u_rename_in_agent.sqr STREAM:2674}
