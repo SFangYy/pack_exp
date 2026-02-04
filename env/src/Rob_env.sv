@@ -8,6 +8,8 @@
 `ifndef ROB_ENV__SV
 `define ROB_ENV__SV
 
+import CSR_in_agent_python_pkg::*;
+
 class Rob_env  extends tcnt_env_base;
 
     Rob_env_cfg cfg;
@@ -29,6 +31,10 @@ class Rob_env  extends tcnt_env_base;
 
     Rob_output_agent  u_Rob_output_agent    ;
     uvm_tlm_analysis_fifo #(Rob_output_agent_xaction) Rob_output_mon2rm_fifo;
+
+    // Python-UVM integration agent
+    CSR_in_agent_xaction_xagent         u_CSR_in_python_agent;
+    CSR_in_agent_xaction_xagent_config  u_CSR_in_python_agent_cfg;
 
     uvm_tlm_analysis_fifo #(Rob_common_xaction) rm2scb_exp_fifo;
     uvm_tlm_analysis_fifo #(Rob_common_xaction) rm2scb_act_fifo;
@@ -89,6 +95,14 @@ function void Rob_env::build_phase(uvm_phase phase);
     this.rm = Rob_rm::type_id::create("rm", this);
     uvm_config_db#(Rob_env_cfg)::set(this,"rm","cfg",this.cfg) ;
     this.scb = tcnt_scb_base#(Rob_common_xaction)::type_id::create("scb", this);
+
+    // Create and configure the python agent
+    u_CSR_in_python_agent_cfg = CSR_in_agent_xaction_xagent_config::type_id::create("u_CSR_in_python_agent_cfg", this);
+    u_CSR_in_python_agent_cfg.is_active = UVM_ACTIVE;
+    // The channel name must match the one used in the python script
+    u_CSR_in_python_agent_cfg.channel_name = "CSR_in_agent_xaction";
+    uvm_config_db#(CSR_in_agent_xaction_xagent_config)::set(this, "u_CSR_in_python_agent", "CSR_in_agent_xaction_xagent_config", u_CSR_in_python_agent_cfg);
+    this.u_CSR_in_python_agent = CSR_in_agent_xaction_xagent::type_id::create("u_CSR_in_python_agent", this);
 
 endfunction
 

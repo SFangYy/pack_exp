@@ -184,3 +184,13 @@ COV_GUI_CMD = ${COV_MERGE_MODE} && imc -load cov_work/scope/TB_ALL  -load_refine
 COV_TXT_CMD = ${COV_MERGE_MODE} && imc -execcmd "${COV_LOAD_CMD}; ${COV_EL_CMD}; ${COV_GENTXT_CMD} ${COV_TXT_MODE}; ${COV_GENCSV_CMD} ${COV_CSV_MODE}"
 COV_TXT_SUM_CMD = ${COV_MERGE_ALL} && imc -execcmd "${COV_LOAD_CMD}; ${COV_EL_CMD}; ${COV_GENTXT_CMD} ${COV_TXT_ALL}; ${COV_GENCSV_CMD} ${COV_CSV_ALL}"
 
+#-----------------------------------------#
+# UVM-Python Integration (UVMC)           #
+#-----------------------------------------#
+# Assume UVMC_HOME is set in the environment
+CMP_OPTIONS += -incdir ${UVMC_HOME}/src/connect/sv
+# Add the UVMC C++ source file to be compiled and linked by xrun
+UVMC_SRC = ${UVMC_HOME}/src/connect/sc/uvmc.cpp
+# Add the UVMC package to the list of files to compile
+UVMC_PKG = ${UVMC_HOME}/src/connect/sv/uvmc_pkg.sv
+

@@ -12,4 +12,5 @@
 -F ../env/Rob_env.f
 -F ../tc/tc.f
 ../tb/top_tb.sv
+../tb/sv_main.sv
 

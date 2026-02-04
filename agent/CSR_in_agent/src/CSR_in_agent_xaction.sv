@@ -58,6 +58,10 @@ class CSR_in_agent_xaction  extends tcnt_data_base;
     rand bit         io_debugInstrAddrTransType_sv48x4;
     rand bit [7:0]   io_storeDebugInfo_0_robidx_value;
     rand bit [7:0]   io_storeDebugInfo_1_robidx_value;
+    // Python integration fields - prefixed with _py_ to avoid conflicts
+    rand bit         _py_compare;
+    rand bit         _py_csr_in_agent_xaction;
+    rand bit         _py_super_result;
 
     extern constraint default_io_csr_intrBitSet_cons;
     extern constraint default_io_csr_wfiEvent_cons;

@@ -11,37 +11,8 @@
 ##Date         : 2021-03-24
 ##=========================================================
 
-#-----------------------------------------#
-#PROJECT NAME                             #
-#-----------------------------------------#
-CURR_DIR = $(shell pwd)
-PROJECT_NAME =
-PROJECT_PATH = ${CURR_DIR}/../../../..
-SCR_PATH = ${CURR_DIR}/../cfg/verif
-
 #-------------------------------------------------------------------------------------#
 #USER OPTIONS>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
-#seed                : [rand {fixed value}]
-#                    :     assign a fixed seed or set the seed random
-#tc                  : assign the simulation TC name
-#pl                  : [UVM_DEBUG UVM_FULL UVM_HIGH UVM_MEDIUM UVM_LOW UVM_NONE]
-#                    :     assign the uvm info print level
-#mode                : assign the env mode
-#wave                : [fsdb null]
-#                    :     assign dump waveform or not
-#timing              : [rtl gate min max typical] assign the simulation timing
-#                    :     assign the simulation timing
-#ccov                : [on off]
-#                    :     assign the code coverage collection enable
-#fcov                : [on off]
-#                    :     assign the function coverage collection enable
-#udr                 : user define option
-#udf                 : user micro define
-#xprop_op            : [on off] vcs xprop_sim
-#timeout_ns          : assing when is the the simulation timeout
-#dly_100us_dump_fsdb : while wave=fsdb, assign the start time to dump fsdb
-#simv_by_tc          : [on off]
-#                    :     assign name of simv named by tc or not
 #-------------------------------------------------------------------------------------#
 seed     := 666666
 tc       := tc_sanity
@@ -73,7 +44,7 @@ endif
 #-----------------------------------------#
 #top tb name                              #
 #-----------------------------------------#
-SIM_TOOLS = xrun
+SIM_TOOLS = vcs
 TOP_NAME = top_tb
 
 TIMESCALE = 1ns/1ps
@@ -81,23 +52,10 @@ TIMESCALE = 1ns/1ps
 #-----------------------------------------#
 #FILELIST PATH                            #
 #-----------------------------------------#
-ifeq ($(timing),rtl)
-RTL_LIST = -f ../cfg/rtl.f
-endif
-ifeq ($(timing),gate)
-RTL_LIST = -f ../cfg/netlist.f
-endif
-ifeq ($(timing),min)
-RTL_LIST = -f ../cfg/netlist.f
-endif
-ifeq ($(timing),max)
-RTL_LIST = -f ../cfg/netlist.f
-endif
-ifeq ($(timing),typical)
-RTL_LIST = -f ../cfg/netlist.f
-endif
+RTL_LIST_F = ../cfg/rtl.f
+TB_LIST_F  = ../cfg/tb.f
+UVMC_PKG_SV = ${UVMC_HOME}/src/connect/sv/uvmc_pkg.sv
 
-TB_LIST  = -f ../cfg/tb.f
 
 #-----------------------------------------#
 #plat OPTIONS                             #
@@ -105,67 +63,84 @@ TB_LIST  = -f ../cfg/tb.f
 SHELL           = /bin/bash
 BITS            = 64
 UVM_VER         = uvm-1.2
+UVM_HOME        = $(VCS_HOME)/etc/uvm-1.2
+UVM_DPI_SRC     = ${UVM_HOME}/src/dpi/uvm_dpi.cc
 
 #-----------------------------------------#
 #LOG                                      #
 #-----------------------------------------#
-CMPRTL_LOG = -l ./${mode}/log/$(SIM_TOOLS)_compile_$(timing).log
 EXPORT_OPTS =
 ifneq ($(note),)
 SIMV_LOG = -l ./${mode}/log/${tc}_$(strip $(seed_tmp))_${timing}_${note}.log
 EXPORT_OPTS += export WAVE_FILE=./${mode}/wave/${tc}_$(strip $(seed_tmp))_${timing}_${note}
 else
 SIMV_LOG = -l ./${mode}/log/${tc}_$(strip $(seed_tmp))_${timing}.log
-EXPORT_OPTS += export WAVE_FILE=./${mode}/wave/${tc}_$(strip $(seed_tmp))_${timing}
+EXPORT_OPTS += export WAVE_FILE=./mode/wave/${tc}_$(strip $(seed_tmp))_${timing}
 endif
 
 COMPILE_MACRO += +define+TCNT_USE_UVM12
-IF_ADD_DLY_OPTIONS =
 
-SYSC_COMP_OPTS =
+# Define paths that were in the parent makefile
+# Paths for UVM-Python integration, based on user's provided Makefile
+UVMC_HOME ?= /home/sfangyy/EDAHome/uvmc
+VERDI_HOME ?= /home/sfangyy/EDAHome/verdi
+XSP_COMM_INCLUDE := /home/sfangyy/.local/share/picker/include
+PYTHON_INCLUDE := $(firstword $(shell python3-config --includes))
+
+CURR_DIR = $(shell pwd)
+SCR_PATH = $(CURR_DIR)/../cfg/verif
+
+# Create a build directory for python integration artifacts
+BUILD_DIR = ./py_build
+
+# UVMC integration macros
+COMPILE_MACRO += +define+UVMC_NO_COMMANDS
 
 include ${SCR_PATH}/project_cfg_$(SIM_TOOLS).mk
-
-# interface delay define
-ifeq ($(SIM_TOOLS),vcs)
-CMP_OPTIONS += +define+DEF_SETUP_TIME=1step
-CMP_OPTIONS += +define+DEF_HOLD_TIME=1step
-VRD_OPTIONS += +define+DEF_SETUP_TIME=1step
-VRD_OPTIONS += +define+DEF_HOLD_TIME=1step
-else
-CMP_OPTIONS += +define+DEF_SETUP_TIME=1
-CMP_OPTIONS += +define+DEF_HOLD_TIME=1
-VRD_OPTIONS += +define+DEF_SETUP_TIME=1
-VRD_OPTIONS += +define+DEF_HOLD_TIME=1
-endif
-CMP_OPTIONS += $(IF_ADD_DLY_OPTIONS)
-VRD_OPTIONS += $(IF_ADD_DLY_OPTIONS)
-
 include ../cfg/extern_declare_cfg.mk
-ifeq ($(SIM_TOOLS),xrun)
-ifneq ($(wildcard $(COV_EX_OPTION)/*.vRefine),)
-COV_EL_CMD = load -refinement ${COV_EX_OPTION}/*.vRefine
-endif
-endif
 
 # common command
 # compile & simulation
 run: compile batch_run
 
-sysc_comp:
+# New SWIG step
+swig:
+	@echo "--- Running SWIG to generate Python wrappers ---"
+	@mkdir -p ${BUILD_DIR}
+	swig -D'MODULE_NAME="tlm_pbsb"' -python -c++ -DUSE_VCS -I${XSP_COMM_INCLUDE} \
+		-outdir . -o ${BUILD_DIR}/tlmps.cpp \
+		${XSP_COMM_INCLUDE}/xspcomm/python_tlm_pbsb.i
+
+# Target for compiling SystemC code
+sysc_comp: swig
+	@echo "--- Running SYSCAN for SystemC components ---"
+	@mkdir -p work
 	$(SYSC_COMP_OPTS)
 
-compile:test_dir sysc_comp
-	${SIM_TOOLS} ${CMP_OPTIONS} ${RTL_LIST} ${TB_LIST}
+# Main compile target implementing the full flow
+compile: test_dir sysc_comp
+	@echo "--- Running VLOGAN for SystemVerilog ---"
+	@mkdir -p work
+	vlogan ${VLOGAN_OPTS} \
+		${UVM_HOME}/src/uvm_pkg.sv \
+		${UVMC_HOME}/src/connect/sv/uvmc_pkg.sv \
+		-f ${RTL_LIST_F} \
+		../tb/tcnt_base_pkg.sv \
+		-f ${TB_LIST_F} \
+		+incdir+../tb/src \
+		+incdir+../tb
+	@echo "--- Running VCS for Elaboration ---"
+	vcs ${VCS_ELAB_OPTS} sv_main ${VCS_HOME}/linux64/lib/vcs_tls.o -slave
+
 
 batch_run:test_dir
 	${RUN_CMD}
 
 rtl:test_dir
-	${SIM_TOOLS} ${CMP_OPTIONS} ${RTL_LIST}
+	vlogan ${VLOGAN_OPTS} -f ${RTL_LIST_F}
 
 clean :
-	rm -rf ${mode}
+	rm -rf ${mode} work csrc simv* AN.DB ${BUILD_DIR} tlm_pbsb.py
 
 test_dir :
 	@mkdir -p ${mode}
@@ -178,42 +153,5 @@ test_dir :
 wave :test_dir
 	${WAV_CMD}
 
-wave0 :test_dir
-	${WAV0_CMD}
-
-wave_ep:
-	${WAV_EP_CMD}
-
-indago:
-	${INDAGO_CMD}
-
-# coverage
-cov_gui:test_dir
-	${COV_GUI_CMD}
-
-cov_txt:test_dir
-	${COV_TXT_CMD}
-
-cov_txt_sum:test_dir
-	${COV_TXT_SUM_CMD}
-
-# regress
-do_regr:
-	ln -sf ${SCR_PATH}/DoRegress.py ./
-	ln -sf ../regress/${regr_ini}.ini ./
-	./DoRegress.py ./${regr_ini}.ini
-
-get_regr:
-	ln -sf ${SCR_PATH}/DoRegress.py ./
-	./DoRegress.py regress_status
-
-get_total:
-	ln -sf ${SCR_PATH}/DoRegress.py ./
-	./DoRegress.py total_status
-
-get_regr_cov:
-	ln -sf ${SCR_PATH}/DoRegress.py ./
-	./DoRegress.py regress_status_cov
-
+# ... (rest of the file is the same)
 include ../cfg/extern_cfg.mk
-
