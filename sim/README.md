@@ -13,7 +13,7 @@ sim/
 ├── Makefile              # 编译脚本
 ├── README.md             # 本文档
 └── base_fun/             # 所有输出文件目录
-    ├── CSR_in_agent_xaction/  # Python 包和共享库
+    ├── PyRob/                 # Python 包和共享库
     │   ├── __init__.py        # DUT Python 接口
     │   ├── xagent.py          # Agent 类定义
     │   ├── utils_pkg.sv       # 序列化/反序列化宏
@@ -62,8 +62,6 @@ make all
 1. 清理旧的构建产物
 2. 编译验证环境
 3. 复制 xspcomm 库
-4. 复制 Python 包文件
-5. 复制 Python 示例脚本
 
 ### 编译验证环境
 
@@ -72,8 +70,8 @@ make compile
 ```
 
 仅编译验证环境,生成:
-- `base_fun/CSR_in_agent_xaction/_tlm_pbsb.so` - VCS 共享库
-- `base_fun/CSR_in_agent_xaction/tlm_pbsb.py` - SWIG Python 接口
+- `base_fun/PyRob/_tlm_pbsb.so` - VCS 共享库
+- `base_fun/PyRob/tlm_pbsb.py` - SWIG Python 接口
 - `base_fun/exec/simv` - 传统 UVM 可执行文件
 
 ### 清理构建产物
@@ -94,9 +92,8 @@ make run_python
 ```
 
 运行 Python 驱动的 UVM 仿真:
-1. 复制所需的 Python 文件
-2. 预加载 `_tlm_pbsb.so` 共享库
-3. 执行 `base_fun/example.py`
+1. 预加载 `_tlm_pbsb.so` 共享库
+2. 执行 `base_fun/example.py`
 
 ### 运行传统 UVM 仿真
 
@@ -112,8 +109,6 @@ make run
 
 ```bash
 make copy_xspcomm       # 复制 xspcomm 库
-make copy_python_pkg    # 复制 Python 包文件
-make copy_example       # 复制 Python 示例脚本
 ```
 
 ### 查看帮助
@@ -159,7 +154,7 @@ example.py                              Rob_env.sv
 ```bash
 swig -D'MODULE_NAME="tlm_pbsb"' -python -c++ -DUSE_VCS \
      -I${XSP_COMM_INCLUDE} \
-     -outdir base_fun/CSR_in_agent_xaction \
+     -outdir base_fun/PyRob \
      -o base_fun/build/tlmps.cpp \
      ${XSP_COMM_INCLUDE}/xspcomm/python_tlm_pbsb.i
 ```
@@ -170,7 +165,7 @@ swig -D'MODULE_NAME="tlm_pbsb"' -python -c++ -DUSE_VCS \
 - `xspcomm/python_tlm_pbsb.i` - SWIG 接口定义文件
 
 **输出**:
-- `base_fun/CSR_in_agent_xaction/tlm_pbsb.py` - Python 接口
+- `base_fun/PyRob/tlm_pbsb.py` - Python 接口
 - `base_fun/build/tlmps.cpp` - Python-C++ 桥接代码
 
 #### 2. SystemC 编译
@@ -234,7 +229,7 @@ vcs -sysc=deltasync -lca \
     -CFLAGS -DVCS ${UVM_HOME}/src/dpi/uvm_dpi.cc \
     -debug_access+all \
     -uvm \
-    -o base_fun/CSR_in_agent_xaction/_tlm_pbsb.so \
+    -o base_fun/PyRob/_tlm_pbsb.so \
     -e VcsMain sv_main \
     ${VCS_HOME}/linux64/lib/vcs_tls.o -slave \
     -Mdir=base_fun/build
@@ -249,14 +244,14 @@ vcs -sysc=deltasync -lca \
 - Verdi 调试接口
 
 **输出**:
-- `base_fun/CSR_in_agent_xaction/_tlm_pbsb.so` - 最终的共享库 (95MB)
+- `base_fun/PyRob/_tlm_pbsb.so` - 最终的共享库 (95MB)
 
 ### Python 端集成
 
 #### 1. Python 包结构
 
 ```python
-base_fun/CSR_in_agent_xaction/
+base_fun/PyRob/
 ├── __init__.py       # DUT 接口和初始化
 ├── xagent.py         # Agent 和事务类
 ├── tlm_pbsb.py       # SWIG 生成的 TLM 接口
@@ -281,7 +276,7 @@ tlm_vcs_init()  # 调用 VCS 初始化函数
 #### 3. DUT 接口
 
 ```python
-from CSR_in_agent_xaction import DUTCSR_in_agent_xaction
+from PyRob import DUTCSR_in_agent_xaction
 
 # 初始化 DUT
 dut = DUTCSR_in_agent_xaction()
@@ -412,11 +407,11 @@ make run                    # 运行传统仿真
 
 | 文件 | 说明 |
 |------|------|
-| `CSR_in_agent_xaction/__init__.py` | DUT 接口类,自动初始化 VCS |
-| `CSR_in_agent_xaction/xagent.py` | Agent 和事务类定义 |
-| `CSR_in_agent_xaction/tlm_pbsb.py` | SWIG 生成的 TLM 接口 |
-| `CSR_in_agent_xaction/_tlm_pbsb.so` | VCS 生成的共享库 |
-| `CSR_in_agent_xaction/xspcomm/` | xspcomm Python 库 |
+| `PyRob/__init__.py` | DUT 接口类,自动初始化 VCS |
+| `PyRob/xagent.py` | Agent 和事务类定义 |
+| `PyRob/tlm_pbsb.py` | SWIG 生成的 TLM 接口 |
+| `PyRob/_tlm_pbsb.so` | VCS 生成的共享库 |
+| `PyRob/xspcomm/` | xspcomm Python 库 |
 | `example.py` | Python 示例脚本 |
 
 ### SystemVerilog 端

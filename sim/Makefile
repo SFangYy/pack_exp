@@ -14,7 +14,7 @@ XSP_PYTHON:=/home/sfangyy/.local/share/picker/python
 # Directory structure - all outputs go to base_fun/
 CURR_DIR := $(shell pwd)
 TOP_DIR := $(CURR_DIR)/..
-PKG_DIR := ../uvmpy/CSR_in_agent_xaction
+PKG_DIR := $(OUT_DIR)/PyRob
 OUT_DIR := ./base_fun
 BUILD_DIR := $(OUT_DIR)/build
 TOP_MODULE := sv_main
@@ -70,7 +70,7 @@ VCS_ELAB = vcs -sysc=deltasync -lca \
 		${VERDI_HOME}/share/PLI/VCS/LINUX64/pli.a \
 		-CFLAGS -DVCS ${UVM_HOME}/src/dpi/uvm_dpi.cc \
 		-uvm \
-		-o $(OUT_DIR)/CSR_in_agent_xaction/_tlm_pbsb.so \
+		-o $(OUT_DIR)/PyRob/_tlm_pbsb.so \
 		-l $(OUT_DIR)/log/vcs_elab.log \
 		-e VcsMain ${TOP_MODULE} ${VCS_HOME}/linux64/lib/vcs_tls.o -slave \
 		-Mdir=${BUILD_DIR}
@@ -78,7 +78,7 @@ VCS_ELAB = vcs -sysc=deltasync -lca \
 .PHONY: all clean compile run help
 
 # Default target - clean, compile and prepare for Python-UVM simulation
-all: clean compile copy_xspcomm copy_python_pkg copy_example
+all: clean compile copy_xspcomm
 	@echo ""
 	@echo "========================================="
 	@echo "  Build Complete!"
@@ -90,29 +90,35 @@ all: clean compile copy_xspcomm copy_python_pkg copy_example
 	@echo "  make run"
 	@echo "========================================="
 
-# Clean target - remove all build artifacts
+# Clean target - remove only build artifacts, keep source files
 clean:
 	@echo "Cleaning build artifacts..."
-	@rm -rf ${OUT_DIR}
-	@rm -rf work csrc simv* AN.DB tlm_pbsb.py
+	@rm -rf ${BUILD_DIR}
+	@rm -rf ${OUT_DIR}/exec
+	@rm -rf ${OUT_DIR}/log
+	@rm -rf ${OUT_DIR}/wave
+	@rm -rf ${OUT_DIR}/vc_hdrs.h
+	@rm -rf ${OUT_DIR}/PyRob/tlm_pbsb.py
+	@rm -rf ${OUT_DIR}/PyRob/_tlm_pbsb.so*
+	@rm -rf work csrc simv* AN.DB
 	@rm -rf *.log *.log.cmp *.vpd DVE* __pycache__
 	@rm -rf ${CURR_DIR}/.vlogan*
 	@echo "✓ Clean complete."
 
 # Compile target
-compile: $(OUT_DIR)/CSR_in_agent_xaction/_tlm_pbsb.so
+compile: $(OUT_DIR)/PyRob/_tlm_pbsb.so
 
-$(OUT_DIR)/CSR_in_agent_xaction/_tlm_pbsb.so:
+$(OUT_DIR)/PyRob/_tlm_pbsb.so:
 	@echo "=== Rob Verification Compilation ==="
 	@mkdir -p ${BUILD_DIR}
-	@mkdir -p ${OUT_DIR}/CSR_in_agent_xaction
+	@mkdir -p ${OUT_DIR}/PyRob
 	@mkdir -p ${OUT_DIR}/exec
 	@mkdir -p ${OUT_DIR}/log
 	@mkdir -p ${OUT_DIR}/wave
 
 	@echo "--- Step 1: Running SWIG to generate Python wrappers ---"
 	swig -D'MODULE_NAME="tlm_pbsb"' -python -c++ -DUSE_VCS -I${XSP_COMM_INCLUDE} \
-		-outdir $(OUT_DIR)/CSR_in_agent_xaction -o ${BUILD_DIR}/tlmps.cpp \
+		-outdir $(OUT_DIR)/PyRob -o ${BUILD_DIR}/tlmps.cpp \
 		${XSP_COMM_INCLUDE}/xspcomm/python_tlm_pbsb.i
 
 	@echo "--- Step 2: Running SYSCAN for SystemC components ---"
@@ -144,32 +150,18 @@ run: compile
 		exit 1; \
 	fi
 
-# Copy xspcomm library to output directory
-copy_xspcomm:
-	@echo "--- Copying xspcomm library ---"
-	@cp -r ${XSP_PYTHON}/xspcomm $(OUT_DIR)/xspcomm
-	@cp -r ${XSP_PYTHON}/xspcomm $(OUT_DIR)/CSR_in_agent_xaction/xspcomm
-	@echo "✓ xspcomm library copied to $(OUT_DIR)/xspcomm and $(OUT_DIR)/CSR_in_agent_xaction/xspcomm"
-
-# Copy Python package files to output directory
-copy_python_pkg:
-	@echo "--- Copying Python package files ---"
-	@mkdir -p $(OUT_DIR)/CSR_in_agent_xaction
-	@cp $(PKG_DIR)/__init__.py $(OUT_DIR)/CSR_in_agent_xaction/
-	@cp $(PKG_DIR)/xagent.py $(OUT_DIR)/CSR_in_agent_xaction/
-	@cp $(PKG_DIR)/utils_pkg.sv $(OUT_DIR)/CSR_in_agent_xaction/
-	@echo "✓ Python package files copied to $(OUT_DIR)/CSR_in_agent_xaction/"
-
-# Copy Python example to output directory
-copy_example:
-	@echo "--- Copying Python example ---"
-	@cp ../uvmpy/example.py $(OUT_DIR)/example.py
-	@echo "✓ Python example copied to $(OUT_DIR)/example.py"
+# Copy xspcomm library to Python package directory
+copy_xspcomm: compile
+	@echo "Copying xspcomm library..."
+	@mkdir -p $(PKG_DIR)
+	@cp -rf $(XSP_PYTHON)/xspcomm $(PKG_DIR)/
+	@echo "Done!"
 
 # Run Python example
-run_python: compile copy_xspcomm copy_python_pkg copy_example
+run_python: compile copy_xspcomm
 	@echo "Running Python example..."
-	@cd $(OUT_DIR) && LD_PRELOAD=$(PWD)/$(OUT_DIR)/CSR_in_agent_xaction/_tlm_pbsb.so python3 -u example.py
+	@cd $(OUT_DIR) && LD_PRELOAD=$(PWD)/$(OUT_DIR)/PyRob/_tlm_pbsb.so python3 -u example.py
+
 # Help target
 help:
 	@echo "Available targets:"
@@ -178,7 +170,5 @@ help:
 	@echo "  make compile      - Compile the verification environment"
 	@echo "  make run          - Run the traditional UVM simulation"
 	@echo "  make copy_xspcomm - Copy xspcomm library to output directory"
-	@echo "  make copy_python_pkg - Copy Python package files to output directory"
-	@echo "  make copy_example - Copy Python example to output directory"
 	@echo "  make run_python   - Run the Python-UVM example"
 	@echo "  make help         - Show this help message"
