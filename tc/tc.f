@@ -7,3 +7,4 @@ tc_pkg.sv
 // ./src/tc_base.sv
 // ./src/tc_sanity.sv
 
+src/tc_python.sv

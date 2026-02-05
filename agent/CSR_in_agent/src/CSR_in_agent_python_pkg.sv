@@ -347,4 +347,8 @@ class CSR_in_agent_xaction_xagent extends uvm_agent;
     endfunction
 
 endclass
+
+`include "python_driver.sv"
+`include "python_monitor.sv"
+
 endpackage

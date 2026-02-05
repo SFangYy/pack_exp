@@ -2,8 +2,8 @@
 `define SV_MAIN__SV
 
 module sv_main;
-    // Import top_tb module
-    `include "top_tb.sv"
+    // Instantiate top_tb module
+    top_tb u_top_tb();
 endmodule
 
 `endif

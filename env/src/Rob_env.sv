@@ -102,6 +102,17 @@ function void Rob_env::build_phase(uvm_phase phase);
     // The channel name must match the one used in the python script
     u_CSR_in_python_agent_cfg.channel_name = "CSR_in_agent_xaction";
     uvm_config_db#(CSR_in_agent_xaction_xagent_config)::set(this, "u_CSR_in_python_agent", "CSR_in_agent_xaction_xagent_config", u_CSR_in_python_agent_cfg);
+    
+    // Set factory overrides to use custom Python driver and monitor
+    set_type_override_by_type(
+        CSR_in_agent_xaction_xdriver::get_type(),
+        CSR_in_agent_python_pkg::CSR_in_agent_python_driver::get_type()
+    );
+    set_type_override_by_type(
+        CSR_in_agent_xaction_xmonitor::get_type(),
+        CSR_in_agent_python_pkg::CSR_in_agent_python_monitor::get_type()
+    );
+    
     this.u_CSR_in_python_agent = CSR_in_agent_xaction_xagent::type_id::create("u_CSR_in_python_agent", this);
 
 endfunction

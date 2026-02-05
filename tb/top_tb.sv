@@ -37,9 +37,16 @@ module top_tb;
     `include "../tb/tc_if_connect.sv"
     `include "../../../ut/Rob/tb/Rob_connect.sv"
     `ROB_CONNECT(env,top_tb.U_Rob)
+    
+    // Python-UVM Integration: Connect interface for Python agent
+    initial begin
+        uvm_config_db#(virtual CSR_in_agent_interface)::set(null, "*env.u_CSR_in_python_agent*", "vif", u_Rob__CSR_in_if);
+    end
 
     initial begin
-       run_test();
+       $display("===== TOP_TB: Starting run_test =====");
+       run_test("tc_python");
+       $display("===== TOP_TB: run_test returned =====");
     end
 
     //`include "../tb/gen_wave.sv"
@@ -47,4 +54,3 @@ module top_tb;
 
 endmodule
 `endif
-

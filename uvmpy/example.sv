@@ -153,10 +153,6 @@ vif.io_storeDebugInfo_1_robidx_value = tr.io_storeDebugInfo_1_robidx_value;
 vif.compare = tr.compare;
 vif.CSR_in_agent_xaction = tr.CSR_in_agent_xaction;
 vif.super_result = tr.super_result;
-<<<<<<< HEAD
-
-=======
->>>>>>> feat_uvm
         `uvm_info("CSR_in_agent_xaction_driver", "DUT inputs driven", UVM_MEDIUM)
     endtask
 
@@ -251,10 +247,6 @@ tr.io_storeDebugInfo_1_robidx_value = vif.io_storeDebugInfo_1_robidx_value;
 tr.compare = vif.compare;
 tr.CSR_in_agent_xaction = vif.CSR_in_agent_xaction;
 tr.super_result = vif.super_result;
-<<<<<<< HEAD
-
-=======
->>>>>>> feat_uvm
             // Send sampled transaction back to Python
             sequence_send(tr);
             prev_tr.copy(tr);
@@ -278,10 +270,6 @@ CSR_in_agent_xaction_xagent            CSR_in_agent_xaction_agent;
 CSR_in_agent_xaction_driver            CSR_in_agent_xaction_drv;
     CSR_in_agent_xaction_monitor           CSR_in_agent_xaction_mon;
 virtual dut_interface vif;
-<<<<<<< HEAD
-
-=======
->>>>>>> feat_uvm
     function new (string name = "example_env", uvm_component parent = null);
         super.new(name, parent);
 
@@ -292,10 +280,6 @@ CSR_in_agent_xaction_config = new("CSR_in_agent_xaction_config");
 
         // Override default driver with custom implementation
         set_type_override_by_type(CSR_in_agent_xaction_xdriver::get_type(), CSR_in_agent_xaction_driver::get_type());
-<<<<<<< HEAD
-=======
-
->>>>>>> feat_uvm
         // Override default monitor with custom implementation
         set_type_override_by_type(CSR_in_agent_xaction_xmonitor::get_type(), CSR_in_agent_xaction_monitor::get_type());
 endfunction
@@ -305,10 +289,6 @@ endfunction
 
         // Build agents
 CSR_in_agent_xaction_agent = CSR_in_agent_xaction_xagent::type_id::create("CSR_in_agent_xaction_agent", this);
-<<<<<<< HEAD
-
-=======
->>>>>>> feat_uvm
         // Get virtual interface
 if(!uvm_config_db#(virtual dut_interface)::get(this, "", "vif", vif))
             `uvm_fatal("example_env", "Virtual interface must be set for vif")

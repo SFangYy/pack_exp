@@ -4,6 +4,14 @@
 # Description: Example usage of CSR_in_agent_xaction DUT
 # Version    : v0.1
 
+import sys
+import os
+import ctypes
+
+# Set dlopen flags to use RTLD_GLOBAL to allow the shared library to be loaded
+# even if it's too large for static TLS
+sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
+
 import random
 from CSR_in_agent_xaction import DUTCSR_in_agent_xaction
 
@@ -12,6 +20,10 @@ if __name__ == "__main__":
     print("="*70)
     print(" CSR_in_agent_xaction Usage Example ".center(70))
     print("="*70 + "\n")
+    
+    # Enable verbose UVM logging
+    import os
+    os.environ['UVM_VERBOSITY'] = 'UVM_HIGH'
 
 
     def monitor_callback(dut):
@@ -32,7 +44,13 @@ if __name__ == "__main__":
     dut.SetUpdateCallback(monitor_callback)
     print("✓ Callback registered\n")
     
-    for i in range(5):
+    # Wait for UVM environment to start
+    print("Waiting for UVM environment to start...")
+    for i in range(1000):
+        dut.Step(1)
+    print("✓ UVM environment should be ready\n")
+    
+    for i in range(20):
         # Set field values using clean interface: dut.field.value
         dut.io_csr_intrBitSet.value = random.randint(0, (1 << 1) - 1)
         dut.io_csr_wfiEvent.value = random.randint(0, (1 << 1) - 1)
