@@ -183,6 +183,7 @@ class DUTCSR_in_agent_xaction:
         self._user_callback: Optional[Callable[['DUTCSR_in_agent_xaction'], None]] = None
         self._xpins = {}
         self._callback_pending = False
+        self._should_send_data = False  # Flag to indicate if data should be sent
 
         # Monitor feedback extra cycles (configurable)
         self._monitor_extra_cycles: int = kwargs.get('monitor_extra_cycles', 1)
@@ -542,7 +543,11 @@ class DUTCSR_in_agent_xaction:
             tr.compare.value = self._xpins['compare'].xdata.value
             tr.CSR_in_agent_xaction.value = self._xpins['CSR_in_agent_xaction'].xdata.value
             tr.super_result.value = self._xpins['super_result'].xdata.value
-            self.agent.drive(tr)
+            # Only send data if flag is set
+            if self._should_send_data:
+                self.agent.drive(tr)
+                self._should_send_data = False  # Reset flag after sending
+            
             self._callback_pending = False
 
             # Run 1 cycle WITHOUT triggering callbacks yet
@@ -551,13 +556,7 @@ class DUTCSR_in_agent_xaction:
             # Run extra cycles for monitor feedback without counting
             self.agent.run(self._monitor_extra_cycles, count_cycles=False)
 
-            # Wait for monitor callback (without counting cycles)
-            wait_count = 0
-            while not self._callback_pending and wait_count < 10:
-                self.agent.run(1, count_cycles=False)
-                wait_count += 1
-
-            # Trigger user callback
+            # Trigger user callback if pending (non-blocking)
             if self._callback_pending and self._user_callback:
                 self._user_callback(self)
                 self._callback_pending = False
@@ -571,6 +570,10 @@ class DUTCSR_in_agent_xaction:
     def SetUpdateCallback(self, callback: Optional[Callable[['DUTCSR_in_agent_xaction'], None]]):
         """Register callback after monitor updates."""
         self._user_callback = callback
+
+    def SendData(self):
+        """Enable data sending for the next Step() call."""
+        self._should_send_data = True
 
     def SetZero(self):
         """Set all pins to zero."""

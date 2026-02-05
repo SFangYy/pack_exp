@@ -109,6 +109,9 @@ if __name__ == "__main__":
         # Show values before Step
         print(f"  [Driver ] Send to UVM     : {dut}")
         
+        # Enable data sending for this transaction
+        dut.SendData()
+        
         # Step advances simulation and syncs with monitor
         dut.Step(1)
 

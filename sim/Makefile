@@ -169,7 +169,7 @@ copy_example:
 # Run Python example
 run_python: compile copy_xspcomm copy_python_pkg copy_example
 	@echo "Running Python example..."
-	@cd $(OUT_DIR) &&  LD_PRELOAD=CSR_in_agent_xaction/_tlm_pbsb.so python3 example.py
+	@cd $(OUT_DIR) && LD_PRELOAD=$(PWD)/$(OUT_DIR)/CSR_in_agent_xaction/_tlm_pbsb.so python3 -u example.py
 # Help target
 help:
 	@echo "Available targets:"

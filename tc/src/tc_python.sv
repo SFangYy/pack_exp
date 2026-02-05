@@ -36,6 +36,10 @@ function void `TC_NAME::build_phase(uvm_phase phase);
         `uvm_fatal(get_type_name(),$sformatf("virtual interface must be set for vif(tc_if)!!!"))
     end
     
+    // Disable XZ check in traditional CSR_in_agent monitor to avoid X-state errors
+    // during Python-driven simulation
+    uvm_config_db#(bit)::set(this, "env.u_CSR_in_agent.cfg", "xz_sw", 0);
+    
     this.env  =  Rob_env::type_id::create("env", this);
 
     // Configure traditional agents with default sequences

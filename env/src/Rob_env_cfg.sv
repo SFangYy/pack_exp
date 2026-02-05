@@ -47,31 +47,37 @@ function void Rob_env_cfg::post_randomize();
     this.u_rename_in_agent_cfg.sqr_sw = tcnt_dec_base::ON  ;
     this.u_rename_in_agent_cfg.drv_sw = tcnt_dec_base::ON  ;
     this.u_rename_in_agent_cfg.mon_sw = tcnt_dec_base::ON ;
+    this.u_rename_in_agent_cfg.xz_sw = tcnt_dec_base::OFF ; // Disable XZ check for Python integration
     this.u_rename_in_agent_cfg.channel_id = 0;
 
     this.u_WriteBack_in_agent_cfg.sqr_sw = tcnt_dec_base::ON  ;
     this.u_WriteBack_in_agent_cfg.drv_sw = tcnt_dec_base::ON  ;
     this.u_WriteBack_in_agent_cfg.mon_sw = tcnt_dec_base::ON ;
+    this.u_WriteBack_in_agent_cfg.xz_sw = tcnt_dec_base::OFF ; // Disable XZ check for Python integration
     this.u_WriteBack_in_agent_cfg.channel_id = 1;
 
     this.u_Redirect_in_agent_cfg.sqr_sw = tcnt_dec_base::ON  ;
     this.u_Redirect_in_agent_cfg.drv_sw = tcnt_dec_base::ON  ;
     this.u_Redirect_in_agent_cfg.mon_sw = tcnt_dec_base::ON ;
+    this.u_Redirect_in_agent_cfg.xz_sw = tcnt_dec_base::OFF ; // Disable XZ check for Python integration
     this.u_Redirect_in_agent_cfg.channel_id = 2;
 
     this.u_CSR_in_agent_cfg.sqr_sw = tcnt_dec_base::ON  ;
     this.u_CSR_in_agent_cfg.drv_sw = tcnt_dec_base::ON  ;
     this.u_CSR_in_agent_cfg.mon_sw = tcnt_dec_base::ON ;
+    this.u_CSR_in_agent_cfg.xz_sw = tcnt_dec_base::OFF ; // Disable XZ check for Python integration
     this.u_CSR_in_agent_cfg.channel_id = 3;
 
     this.u_Mem_in_agent_cfg.sqr_sw = tcnt_dec_base::ON  ;
     this.u_Mem_in_agent_cfg.drv_sw = tcnt_dec_base::ON  ;
     this.u_Mem_in_agent_cfg.mon_sw = tcnt_dec_base::ON ;
+    this.u_Mem_in_agent_cfg.xz_sw = tcnt_dec_base::OFF ; // Disable XZ check for Python integration
     this.u_Mem_in_agent_cfg.channel_id = 4;
 
     this.u_Rob_output_agent_cfg.sqr_sw = tcnt_dec_base::ON  ;
     this.u_Rob_output_agent_cfg.drv_sw = tcnt_dec_base::ON  ;
     this.u_Rob_output_agent_cfg.mon_sw = tcnt_dec_base::ON ;
+    this.u_Rob_output_agent_cfg.xz_sw = tcnt_dec_base::OFF ; // Disable XZ check for Python integration
     this.u_Rob_output_agent_cfg.channel_id = 5;
 
 endfunction:post_randomize

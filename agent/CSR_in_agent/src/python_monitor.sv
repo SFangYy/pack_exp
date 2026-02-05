@@ -4,8 +4,8 @@ import CSR_in_agent_python_pkg::*;
 //Author       : Python-UVM Integration
 //Module name  : CSR_in_agent_python_monitor
 //Description  : Custom monitor for Python-UVM integration
-//              - Samples CSR_in_agent_xaction transaction signals
-//              - Sends sampled data back to Python via TLM
+//              - Independently samples CSR_in_agent_xaction transaction signals
+//              - Only sends to Python when data changes (optimization)
 //Date         : 2026-02-05
 //=========================================================
 `ifndef CSR_IN_AGENT_PYTHON_MONITOR__SV
@@ -30,15 +30,25 @@ class CSR_in_agent_python_monitor extends CSR_in_agent_xaction_xmonitor;
         `uvm_info("CSR_IN_PYTHON_MON", "Build phase completed", UVM_LOW)
     endfunction
     
-    // Monitor samples interface and sends to Python
+    // Monitor independently samples interface and sends to Python
     virtual task run_phase(uvm_phase phase);
         CSR_in_agent_xaction tr;
         
         `uvm_info("CSR_IN_PYTHON_MON", "Run phase started", UVM_LOW)
         
         forever begin
-            // Wait for clock edge
-            @(posedge vif.clk);
+            // Wait for any input signal to change (indicates new transaction from Python)
+            @(posedge vif.io_csr_intrBitSet or posedge vif.io_csr_wfiEvent or 
+               posedge vif.io_csr_criticalErrorState or posedge vif.io_snpt_snptDeq or
+               posedge vif.io_snpt_useSnpt or vif.io_snpt_snptSelect or
+               posedge vif.io_snpt_flushVec_0 or posedge vif.io_snpt_flushVec_1 or
+               posedge vif.io_snpt_flushVec_2 or posedge vif.io_snpt_flushVec_3 or
+               posedge vif.io_wfi_safeFromMem or posedge vif.io_wfi_safeFromFrontend or
+               posedge vif.io_wfi_enable or posedge vif.io_fromVecExcpMod_busy);
+            
+            `uvm_info("CSR_IN_PYTHON_MON", 
+                      $sformatf("Signal change detected at %0t", $time), 
+                      UVM_HIGH)
             
             // Sample all signals from VIF (only actual hardware signals)
             tr = CSR_in_agent_xaction::type_id::create("tr");
@@ -92,13 +102,27 @@ class CSR_in_agent_python_monitor extends CSR_in_agent_xaction_xmonitor;
             tr.io_storeDebugInfo_0_robidx_value = vif.io_storeDebugInfo_0_robidx_value;
             tr.io_storeDebugInfo_1_robidx_value = vif.io_storeDebugInfo_1_robidx_value;
             
-            // Send sampled transaction back to Python
+            // Send every sampled transaction to Python using forked process to avoid blocking
             transaction_count++;
-            sequence_send(tr);
             prev_tr.copy(tr);
             
+            // Fork non-blocking send to avoid blocking the monitor loop
+            fork begin
+                CSR_in_agent_xaction tr_copy;
+                tr_copy = CSR_in_agent_xaction::type_id::create("tr_copy");
+                tr_copy.copy(tr);
+                sequence_send(tr_copy);
+            end join_none
+            
             `uvm_info("CSR_IN_PYTHON_MON", 
-                      $sformatf("[%0d] Sampled transaction and sent to Python", transaction_count), 
+                      $sformatf("[%0d] Sampled transaction: intrBitSet=%0b, wfiEvent=%0b, criticalErrorState=%0b, snptDeq=%0b, useSnpt=%0b, snptSelect=%0d - Sent to Python", 
+                                  transaction_count, 
+                                  tr.io_csr_intrBitSet, 
+                                  tr.io_csr_wfiEvent, 
+                                  tr.io_csr_criticalErrorState, 
+                                  tr.io_snpt_snptDeq, 
+                                  tr.io_snpt_useSnpt, 
+                                  tr.io_snpt_snptSelect), 
                       UVM_MEDIUM)
         end
     endtask

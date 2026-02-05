@@ -4,8 +4,9 @@ import CSR_in_agent_python_pkg::*;
 //Author       : Python-UVM Integration
 //Module name  : CSR_in_agent_python_driver
 //Description  : Custom driver for Python-UVM integration
-//              - Receives transactions from Python via TLM
+//              - Receives transactions from Python via TLM (b_transport)
 //              - Drives DUT input signals directly through interface
+//              - Non-blocking: continuously drives without waiting for monitor feedback
 //Date         : 2026-02-05
 //=========================================================
 `ifndef CSR_IN_AGENT_PYTHON_DRIVER__SV
@@ -29,6 +30,7 @@ class CSR_in_agent_python_driver extends CSR_in_agent_xaction_xdriver;
     endfunction
     
     // Override sequence_receive to drive DUT
+    // This method is called by the base class b_transport when Python sends data
     virtual task sequence_receive(CSR_in_agent_xaction tr);
         transaction_count++;
         
@@ -36,8 +38,19 @@ class CSR_in_agent_python_driver extends CSR_in_agent_xaction_xdriver;
                   $sformatf("[%0d] Received transaction from Python", transaction_count), 
                   UVM_LOW)
         
+        // Print received transaction details
+        `uvm_info("CSR_IN_PYTHON_DRV", 
+                  $sformatf("[%0d] Transaction from Python: intrBitSet=%0b, wfiEvent=%0b, criticalErrorState=%0b, snptDeq=%0b, useSnpt=%0b, snptSelect=%0d", 
+                            transaction_count, 
+                            tr.io_csr_intrBitSet, 
+                            tr.io_csr_wfiEvent, 
+                            tr.io_csr_criticalErrorState, 
+                            tr.io_snpt_snptDeq, 
+                            tr.io_snpt_useSnpt, 
+                            tr.io_snpt_snptSelect), 
+                  UVM_MEDIUM)
+        
         // Drive DUT inputs through VIF (only actual hardware signals)
-        @(posedge vif.clk);
         vif.io_csr_intrBitSet <= tr.io_csr_intrBitSet;
         vif.io_csr_wfiEvent <= tr.io_csr_wfiEvent;
         vif.io_csr_criticalErrorState <= tr.io_csr_criticalErrorState;
@@ -88,7 +101,9 @@ class CSR_in_agent_python_driver extends CSR_in_agent_xaction_xdriver;
         vif.io_storeDebugInfo_0_robidx_value <= tr.io_storeDebugInfo_0_robidx_value;
         vif.io_storeDebugInfo_1_robidx_value <= tr.io_storeDebugInfo_1_robidx_value;
         
-        `uvm_info("CSR_IN_PYTHON_DRV", "DUT inputs driven", UVM_MEDIUM)
+        `uvm_info("CSR_IN_PYTHON_DRV", 
+                  $sformatf("[%0d] DUT inputs driven successfully", transaction_count), 
+                  UVM_MEDIUM)
     endtask
     
     function void report_phase(uvm_phase phase);
