@@ -1,7 +1,7 @@
 # Picker output directories
 picker_out_adder/
 py_build/
-uvmpy/
+need*
 
 # Simulation build artifacts
 sim/AN.DB/

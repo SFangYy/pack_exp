@@ -40,7 +40,9 @@ module top_tb;
     
     // Python-UVM Integration: Connect interface for Python agent
     initial begin
-        uvm_config_db#(virtual CSR_in_agent_interface)::set(null, "*env.u_CSR_in_python_agent*", "vif", u_Rob__CSR_in_if);
+        uvm_config_db#(virtual Mem_in_agent_interface)::set(null, "*env.u_Mem_python_agent*", "vif", u_Rob__Mem_in_if);
+        uvm_config_db#(virtual rename_in_agent_interface)::set(null, "*env.u_rename_python_agent*", "vif", u_Rob__rename_in_if);
+        uvm_config_db#(virtual WriteBack_in_agent_interface)::set(null, "*env.u_WriteBack_python_agent*", "vif", u_Rob__WriteBack_in_if);
     end
 
     initial begin

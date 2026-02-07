@@ -1,0 +1,92 @@
+# UVM-Python Hybrid Verification Framework Integration
+
+This document outlines the UVM-Python hybrid verification framework integrated into the `Rob` verification environment. 
+
+## 1. Overview
+
+The hybrid framework enables **Python-driven verification** within a traditional UVM environment. It allows engineers to leverage Python's ecosystem for test scenarios while keeping the cycle-accurate power of SystemVerilog.
+
+### Architecture
+- **SystemVerilog Side**: Unified `rob_python_agent` package with custom Drivers/Monitors.
+- **Python Side (`PyRob`)**: `DUTrob` abstraction, `Agent` manager, and `example.py` test script.
+- **Bridge**: Powered by **UVMC** (UVM Connect) and DPI.
+
+---
+
+## 2. Directory Structure
+
+```text
+agent/rob_python_agent/
+├── rob_python_agent_pkg.sv       # Master Package wrapper
+├── rob_python_agent.f            # Filelist for compilation
+└── src/
+    ├── rob_xagent_generated.sv   # Generated logic from uvmpy_rob
+    ├── utils_pkg.sv              # Serialization utilities
+    ├── Mem_in_agent_python_driver.sv
+    ├── Mem_in_agent_python_monitor.sv
+    ├── rename_in_agent_python_driver.sv
+    ├── rename_in_agent_python_monitor.sv
+    ├── WriteBack_in_agent_python_driver.sv
+    └── WriteBack_in_agent_python_monitor.sv
+
+sim/base_fun/PyRob/
+├── __init__.py                   # DUTrob class definition
+├── xagent.py                     # Transaction classes
+└── xspcomm/                      # Communication library
+```
+
+---
+
+## 3. Integration Log & Fixes
+
+### A. SystemVerilog Modifications
+1.  **Package Wrapper**: Created `rob_python_agent_pkg.sv` to manage namespaces and prevent symbol collisions.
+2.  **Path Correction**: Fixed absolute paths in the generated `.f` files to relative ones for portability.
+3.  **Code Cleanup**: Removed invalid serialization of methods (like `compare()`) and non-existent members from the generated SV code.
+
+### B. Python Modifications
+1.  **Unified Agent**: Merged multiple transaction types into a single `xagent.py`.
+2.  **DUT Abstraction**: Updated `DUTrob` to include all pins from the new transactions.
+
+---
+
+## 4. Driving UVM from Python (Guide)
+
+The **`DUTrob`** class is the primary interface for driving simulation from Python.
+
+### Step 1: Initialization
+```python
+from PyRob import DUTrob
+dut = DUTrob()
+dut.InitClock()
+```
+
+### Step 2: Set Signal Values (Write)
+Modify attributes directly. Values are buffered locally using a **Dirty-Check** mechanism.
+```python
+dut.io_enq_req_0_valid.value = 1
+dut.io_enq_req_0_bits_pc.value = 0x1234
+```
+
+### Step 3: Advance Simulation (Sync)
+Call `dut.Step(n)` to synchronize with the SV simulator. This triggers the data exchange.
+```python
+dut.Step(1)
+```
+
+### Step 4: Handle Feedback (Read)
+Use `SetUpdateCallback` to respond to data sent back by SV Monitors.
+```python
+def callback(dut):
+    if dut.io_enq_req_0_valid.value:
+        print(dut.io_enq_req_0_bits_pc.value)
+
+dut.SetUpdateCallback(callback)
+```
+
+---
+
+## 5. How to Run
+
+1.  **Compile**: `make compile`
+2.  **Run**: `make run`

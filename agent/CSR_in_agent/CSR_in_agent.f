@@ -10,9 +10,3 @@ CSR_in_agent_pkg.sv
 // ./src/CSR_in_agent_monitor.sv
 // ./src/CSR_in_agent_sequencer.sv
 // ./src/CSR_in_agent.sv
-
-// Python integration files (must be after CSR_in_agent_pkg.sv)
-src/utils_pkg.sv
-src/CSR_in_agent_python_pkg.sv
-src/python_driver.sv
-src/python_monitor.sv

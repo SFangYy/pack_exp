@@ -9,6 +9,7 @@
 `define ROB_ENV__SV
 
 import CSR_in_agent_python_pkg::*;
+import rob_python_agent_pkg::*;
 
 class Rob_env  extends tcnt_env_base;
 
@@ -32,9 +33,15 @@ class Rob_env  extends tcnt_env_base;
     Rob_output_agent  u_Rob_output_agent    ;
     uvm_tlm_analysis_fifo #(Rob_output_agent_xaction) Rob_output_mon2rm_fifo;
 
-    // Python-UVM integration agent
-    CSR_in_agent_xaction_xagent         u_CSR_in_python_agent;
-    CSR_in_agent_xaction_xagent_config  u_CSR_in_python_agent_cfg;
+    Mem_in_agent_xaction_xagent         u_Mem_python_agent;
+    Mem_in_agent_xaction_xagent_config  u_Mem_python_agent_cfg;
+    Mem_in_agent_xaction_xagent_config  u_Mem_python_agent_cfg;
+
+    rename_in_agent_xaction_xagent         u_rename_python_agent;
+    rename_in_agent_xaction_xagent_config  u_rename_python_agent_cfg;
+
+    WriteBack_in_agent_xaction_xagent         u_WriteBack_python_agent;
+    WriteBack_in_agent_xaction_xagent_config  u_WriteBack_python_agent_cfg;
 
     uvm_tlm_analysis_fifo #(Rob_common_xaction) rm2scb_exp_fifo;
     uvm_tlm_analysis_fifo #(Rob_common_xaction) rm2scb_act_fifo;
@@ -96,24 +103,32 @@ function void Rob_env::build_phase(uvm_phase phase);
     uvm_config_db#(Rob_env_cfg)::set(this,"rm","cfg",this.cfg) ;
     this.scb = tcnt_scb_base#(Rob_common_xaction)::type_id::create("scb", this);
 
-    // Create and configure the python agent
-    u_CSR_in_python_agent_cfg = CSR_in_agent_xaction_xagent_config::type_id::create("u_CSR_in_python_agent_cfg", this);
-    u_CSR_in_python_agent_cfg.is_active = UVM_ACTIVE;
-    // The channel name must match the one used in the python script
-    u_CSR_in_python_agent_cfg.channel_name = "CSR_in_agent_xaction";
-    uvm_config_db#(CSR_in_agent_xaction_xagent_config)::set(this, "u_CSR_in_python_agent", "CSR_in_agent_xaction_xagent_config", u_CSR_in_python_agent_cfg);
-    
-    // Set factory overrides to use custom Python driver and monitor
-    set_type_override_by_type(
-        CSR_in_agent_xaction_xdriver::get_type(),
-        CSR_in_agent_python_pkg::CSR_in_agent_python_driver::get_type()
-    );
-    set_type_override_by_type(
-        CSR_in_agent_xaction_xmonitor::get_type(),
-        CSR_in_agent_python_pkg::CSR_in_agent_python_monitor::get_type()
-    );
-    
-    this.u_CSR_in_python_agent = CSR_in_agent_xaction_xagent::type_id::create("u_CSR_in_python_agent", this);
+    // Create and configure Mem python agent
+    u_Mem_python_agent_cfg = Mem_in_agent_xaction_xagent_config::type_id::create("u_Mem_python_agent_cfg", this);
+    u_Mem_python_agent_cfg.is_active = UVM_ACTIVE;
+    u_Mem_python_agent_cfg.channel_name = "Mem_in_agent_xaction";
+    uvm_config_db#(Mem_in_agent_xaction_xagent_config)::set(this, "u_Mem_python_agent", "Mem_in_agent_xaction_xagent_config", u_Mem_python_agent_cfg);
+    set_type_override_by_type(Mem_in_agent_xaction_xdriver::get_type(), Mem_in_agent_python_driver::get_type());
+    set_type_override_by_type(Mem_in_agent_xaction_xmonitor::get_type(), Mem_in_agent_python_monitor::get_type());
+    this.u_Mem_python_agent = Mem_in_agent_xaction_xagent::type_id::create("u_Mem_python_agent", this);
+
+    // Create and configure rename python agent
+    u_rename_python_agent_cfg = rename_in_agent_xaction_xagent_config::type_id::create("u_rename_python_agent_cfg", this);
+    u_rename_python_agent_cfg.is_active = UVM_ACTIVE;
+    u_rename_python_agent_cfg.channel_name = "rename_in_agent_xaction";
+    uvm_config_db#(rename_in_agent_xaction_xagent_config)::set(this, "u_rename_python_agent", "rename_in_agent_xaction_xagent_config", u_rename_python_agent_cfg);
+    set_type_override_by_type(rename_in_agent_xaction_xdriver::get_type(), rename_in_agent_python_driver::get_type());
+    set_type_override_by_type(rename_in_agent_xaction_xmonitor::get_type(), rename_in_agent_python_monitor::get_type());
+    this.u_rename_python_agent = rename_in_agent_xaction_xagent::type_id::create("u_rename_python_agent", this);
+
+    // Create and configure WriteBack python agent
+    u_WriteBack_python_agent_cfg = WriteBack_in_agent_xaction_xagent_config::type_id::create("u_WriteBack_python_agent_cfg", this);
+    u_WriteBack_python_agent_cfg.is_active = UVM_ACTIVE;
+    u_WriteBack_python_agent_cfg.channel_name = "WriteBack_in_agent_xaction";
+    uvm_config_db#(WriteBack_in_agent_xaction_xagent_config)::set(this, "u_WriteBack_python_agent", "WriteBack_in_agent_xaction_xagent_config", u_WriteBack_python_agent_cfg);
+    set_type_override_by_type(WriteBack_in_agent_xaction_xdriver::get_type(), WriteBack_in_agent_python_driver::get_type());
+    set_type_override_by_type(WriteBack_in_agent_xaction_xmonitor::get_type(), WriteBack_in_agent_python_monitor::get_type());
+    this.u_WriteBack_python_agent = WriteBack_in_agent_xaction_xagent::type_id::create("u_WriteBack_python_agent", this);
 
 endfunction
 
