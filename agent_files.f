@@ -1,0 +1,6 @@
+agent/CSR_in_agent/src/CSR_in_agent_xaction.sv
+#agent/Mem_in_agent/src/Mem_in_agent_xaction.sv
+#agent/Redirect_in_agent/src/Redirect_in_agent_xaction.sv
+#agent/rename_in_agent/src/rename_in_agent_xaction.sv
+#agent/Rob_output_agent/src/Rob_output_agent_xaction.sv
+#agent/WriteBack_in_agent/src/WriteBack_in_agent_xaction.sv

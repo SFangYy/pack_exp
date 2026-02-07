@@ -1,3 +1,59 @@
+# Picker output directories
 picker_out_adder/
 py_build/
 uvmpy/
+
+# Simulation build artifacts
+sim/AN.DB/
+sim/base_fun/build/
+sim/base_fun/exec/
+sim/base_fun/log/
+sim/base_fun/wave/
+sim/base_fun/xspcomm/
+sim/base_fun/PyRob/tlm_pbsb.py
+sim/base_fun/PyRob/_tlm_pbsb.so*
+sim/base_fun/PyRob/_tlm_pbsb.so.daidir/
+sim/base_fun/vc_hdrs.h
+sim/work/
+sim/csrc/
+sim/simv*
+sim/*.log
+sim/*.log.cmp
+sim/*.vpd
+sim/DVE*
+sim/__pycache__/
+sim/.vlogan*
+
+# VCS and Verdi temporary files
+*.daidir/
+*.dve/
+*.rc
+*.conf
+*.cfg
+*.tcl
+ucli.key
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.so
+
+# SystemC and DPI
+tlm_pbsb.py
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# OS files
+Thumbs.db
+desktop.ini
+
+log*

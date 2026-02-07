@@ -4,27 +4,27 @@
 # Description: Example usage of CSR_in_agent_xaction DUT
 # Version    : v0.1
 
-import sys
-import os
 import ctypes
+import os
+import sys
 
 # Set dlopen flags to use RTLD_GLOBAL to allow the shared library to be loaded
 # even if it's too large for static TLS
 sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
 
 import random
+
 from PyRob import DUTCSR_in_agent_xaction
 
-
 if __name__ == "__main__":
-    print("="*70)
+    print("=" * 70)
     print(" CSR_in_agent_xaction Usage Example ".center(70))
-    print("="*70 + "\n")
-    
+    print("=" * 70 + "\n")
+
     # Enable verbose UVM logging
     import os
-    os.environ['UVM_VERBOSITY'] = 'UVM_HIGH'
 
+    os.environ["UVM_VERBOSITY"] = "UVM_HIGH"
 
     def monitor_callback(dut):
         """
@@ -36,20 +36,20 @@ if __name__ == "__main__":
     # Initialize DUT
     print("Initializing DUT...")
     dut = DUTCSR_in_agent_xaction()
-    dut.InitClock() 
+    dut.InitClock()
     print("✓ DUT initialized successfully\n")
-    
+
     # Optional: Register callback for monitor updates
     print("Registering monitor callback...")
     dut.SetUpdateCallback(monitor_callback)
     print("✓ Callback registered\n")
-    
+
     # Wait for UVM environment to start
     print("Waiting for UVM environment to start...")
     for i in range(1000):
         dut.Step(1)
     print("✓ UVM environment should be ready\n")
-    
+
     for i in range(20):
         # Set field values using clean interface: dut.field.value
         dut.io_csr_intrBitSet.value = random.randint(0, (1 << 1) - 1)
@@ -77,23 +77,47 @@ if __name__ == "__main__":
         dut.io_debugEnqLsq_needAlloc_4.value = random.randint(0, (1 << 2) - 1)
         dut.io_debugEnqLsq_needAlloc_5.value = random.randint(0, (1 << 2) - 1)
         dut.io_debugEnqLsq_req_0_valid.value = random.randint(0, (1 << 1) - 1)
-        dut.io_debugEnqLsq_req_0_bits_robIdx_value.value = random.randint(0, (1 << 8) - 1)
-        dut.io_debugEnqLsq_req_0_bits_lqIdx_value.value = random.randint(0, (1 << 7) - 1)
+        dut.io_debugEnqLsq_req_0_bits_robIdx_value.value = random.randint(
+            0, (1 << 8) - 1
+        )
+        dut.io_debugEnqLsq_req_0_bits_lqIdx_value.value = random.randint(
+            0, (1 << 7) - 1
+        )
         dut.io_debugEnqLsq_req_1_valid.value = random.randint(0, (1 << 1) - 1)
-        dut.io_debugEnqLsq_req_1_bits_robIdx_value.value = random.randint(0, (1 << 8) - 1)
-        dut.io_debugEnqLsq_req_1_bits_lqIdx_value.value = random.randint(0, (1 << 7) - 1)
+        dut.io_debugEnqLsq_req_1_bits_robIdx_value.value = random.randint(
+            0, (1 << 8) - 1
+        )
+        dut.io_debugEnqLsq_req_1_bits_lqIdx_value.value = random.randint(
+            0, (1 << 7) - 1
+        )
         dut.io_debugEnqLsq_req_2_valid.value = random.randint(0, (1 << 1) - 1)
-        dut.io_debugEnqLsq_req_2_bits_robIdx_value.value = random.randint(0, (1 << 8) - 1)
-        dut.io_debugEnqLsq_req_2_bits_lqIdx_value.value = random.randint(0, (1 << 7) - 1)
+        dut.io_debugEnqLsq_req_2_bits_robIdx_value.value = random.randint(
+            0, (1 << 8) - 1
+        )
+        dut.io_debugEnqLsq_req_2_bits_lqIdx_value.value = random.randint(
+            0, (1 << 7) - 1
+        )
         dut.io_debugEnqLsq_req_3_valid.value = random.randint(0, (1 << 1) - 1)
-        dut.io_debugEnqLsq_req_3_bits_robIdx_value.value = random.randint(0, (1 << 8) - 1)
-        dut.io_debugEnqLsq_req_3_bits_lqIdx_value.value = random.randint(0, (1 << 7) - 1)
+        dut.io_debugEnqLsq_req_3_bits_robIdx_value.value = random.randint(
+            0, (1 << 8) - 1
+        )
+        dut.io_debugEnqLsq_req_3_bits_lqIdx_value.value = random.randint(
+            0, (1 << 7) - 1
+        )
         dut.io_debugEnqLsq_req_4_valid.value = random.randint(0, (1 << 1) - 1)
-        dut.io_debugEnqLsq_req_4_bits_robIdx_value.value = random.randint(0, (1 << 8) - 1)
-        dut.io_debugEnqLsq_req_4_bits_lqIdx_value.value = random.randint(0, (1 << 7) - 1)
+        dut.io_debugEnqLsq_req_4_bits_robIdx_value.value = random.randint(
+            0, (1 << 8) - 1
+        )
+        dut.io_debugEnqLsq_req_4_bits_lqIdx_value.value = random.randint(
+            0, (1 << 7) - 1
+        )
         dut.io_debugEnqLsq_req_5_valid.value = random.randint(0, (1 << 1) - 1)
-        dut.io_debugEnqLsq_req_5_bits_robIdx_value.value = random.randint(0, (1 << 8) - 1)
-        dut.io_debugEnqLsq_req_5_bits_lqIdx_value.value = random.randint(0, (1 << 7) - 1)
+        dut.io_debugEnqLsq_req_5_bits_robIdx_value.value = random.randint(
+            0, (1 << 8) - 1
+        )
+        dut.io_debugEnqLsq_req_5_bits_lqIdx_value.value = random.randint(
+            0, (1 << 7) - 1
+        )
         dut.io_debugInstrAddrTransType_bare.value = random.randint(0, (1 << 1) - 1)
         dut.io_debugInstrAddrTransType_sv39.value = random.randint(0, (1 << 1) - 1)
         dut.io_debugInstrAddrTransType_sv39x4.value = random.randint(0, (1 << 1) - 1)
@@ -104,15 +128,9 @@ if __name__ == "__main__":
         dut.compare.value = random.randint(0, (1 << 1) - 1)
         dut.CSR_in_agent_xaction.value = random.randint(0, (1 << 1) - 1)
         dut.super_result.value = random.randint(0, (1 << 1) - 1)
-        
-        
+
         # Show values before Step
         print(f"  [Driver ] Send to UVM     : {dut}")
-        
-        # Enable data sending for this transaction
-        dut.SendData()
-        
+
         # Step advances simulation and syncs with monitor
-        dut.Step(1)
-
-
+        dut.Step(10)
