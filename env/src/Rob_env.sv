@@ -8,7 +8,6 @@
 `ifndef ROB_ENV__SV
 `define ROB_ENV__SV
 
-import CSR_in_agent_python_pkg::*;
 import rob_python_agent_pkg::*;
 
 class Rob_env  extends tcnt_env_base;
@@ -34,7 +33,6 @@ class Rob_env  extends tcnt_env_base;
     uvm_tlm_analysis_fifo #(Rob_output_agent_xaction) Rob_output_mon2rm_fifo;
 
     Mem_in_agent_xaction_xagent         u_Mem_python_agent;
-    Mem_in_agent_xaction_xagent_config  u_Mem_python_agent_cfg;
     Mem_in_agent_xaction_xagent_config  u_Mem_python_agent_cfg;
 
     rename_in_agent_xaction_xagent         u_rename_python_agent;

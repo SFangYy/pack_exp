@@ -1,8 +1,13 @@
 import os
 import sys
+import ctypes
 
-# Add current directory to path so we can import PyRob
-sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+# Set dlopen flags to use RTLD_GLOBAL
+sys.setdlopenflags(sys.getdlopenflags() | ctypes.RTLD_GLOBAL)
+
+# Add PyRob directory to path so we can import it
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(SCRIPT_DIR, 'PyRob'))
 
 try:
     from PyRob import DUTCSR_in_agent_xaction

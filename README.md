@@ -18,7 +18,41 @@
   - **UVMC**: 处理跨语言的 TLM 通信。
   - **DPI/PLI**: 管理进程同步和数据传输。
 
+
+具体架构如下:
+
+```
+Python 端                            SystemVerilog 端
+    |                                        |
+    v                                        v
+example.py                              Rob_env.sv
+    |                                        |
+    +-- CSR_in_agent_xaction               +-- CSR_in_agent_xaction_xagent
+        |    (DUT 接口)                          |    (UVM Agent)
+        |                                        |
+        +-- Agent                               +-- Agent
+            |    (Python Agent)                      |    (Python Agent)
+            |                                        |
+            +-- tlm_pbsb.py                         +-- UVMC TLM
+            |    (SWIG 接口)                           |    (跨语言通信)
+            |                                        |
+            +-- _tlm_pbsb.so                        +-- UVM 仿真器
+            |    (VCS 共享库)                            |
+            +----------------------------------------+
+                        TLM 通信
+                   (Publish/Subscribe)
+```
+
 ---
+
+
+### 必需的工具
+
+- **Python 3.11+**: 用于运行 Python 测试脚本
+- **VCS (W-2024.09-SP1)**: Synopsys VCS 仿真器
+- **SWIG**: 用于生成 Python-C++ 接口
+- **GCC/G++**: C++ 编译器
+- **SystemC**: 系统级建模库 (VCS 自带)
 
 ## 2. 目录结构
 
@@ -133,4 +167,144 @@ dut.Step(1)
 
 ## 6. 注意事项
 - **端口名称一致性**: Python 端注册的事务名称必须与 SV 端 `channel_name` 字符串完全匹配。
-- **位宽匹配**: Python 端的 `FieldMeta` 定义必须与 SV 端的 `PICKER_PACK` 偏移量严格对应。
+- **位宽匹配**: Python 端的 `FieldMeta` 定义必须与 SV 端的 `PICKER_PACK` 偏移量严格对应。# Rob 验证环境 - Python-UVM 混合集成
+
+# Makefile 详解
+
+## Makefile 目标
+
+### 完整编译
+
+```bash
+make all
+```
+
+执行完整编译流程,包括:
+1. 清理旧的构建产物
+2. 编译验证环境
+3. 复制 xspcomm 库
+
+### 编译验证环境
+
+```bash
+make compile
+```
+
+仅编译验证环境,生成:
+- `base_fun/PyRob/_tlm_pbsb.so` - VCS 共享库
+- `base_fun/PyRob/tlm_pbsb.py` - SWIG Python 接口
+- `base_fun/exec/simv` - 传统 UVM 可执行文件
+
+
+### 运行 Python-UVM 混合仿真
+
+```bash
+make run_python
+```
+
+运行 Python 驱动的 UVM 仿真:
+1. 预加载 `_tlm_pbsb.so` 共享库
+2. 执行 `base_fun/example.py`
+
+
+
+## Python-UVM 混合集成详解
+
+### 编译流程
+
+#### 1. SWIG 接口生成
+
+```bash
+swig -D'MODULE_NAME="tlm_pbsb"' -python -c++ -DUSE_VCS \
+     -I${XSP_COMM_INCLUDE} \
+     -outdir base_fun/PyRob \
+     -o base_fun/build/tlmps.cpp \
+     ${XSP_COMM_INCLUDE}/xspcomm/python_tlm_pbsb.i
+```
+
+**功能**: 将 C++ 的 TLM 接口包装成 Python 可调用的模块
+
+**输入**:
+- `xspcomm/python_tlm_pbsb.i` - SWIG 接口定义文件
+
+**输出**:
+- `base_fun/PyRob/tlm_pbsb.py` - Python 接口
+- `base_fun/build/tlmps.cpp` - Python-C++ 桥接代码
+
+#### 2. SystemC 编译
+
+```bash
+syscan -cpp g++ -cc gcc -full64 -cflags -g -cflags -DVCS \
+       -tlm2 -cflags -I${VCS_HOME}/include/systemc232/tlm_utils \
+       -cflags -I${UVMC_HOME}/src/connect/sc \
+       -cflags -DUSE_VCS -cflags "${PYTHON_INCLUDE}" \
+       -cflags -I${XSP_COMM_INCLUDE} \
+       ${UVMC_HOME}/src/connect/sc/uvmc.cpp \
+       ${XSP_COMM_INCLUDE}/xspcomm/tlm_pbsb.cpp \
+       base_fun/build/tlmps.cpp
+```
+
+**功能**: 编译 SystemC 代码,生成对象文件
+
+**输入**:
+- `uvmc.cpp` - UVMC 的 SystemC 端实现
+- `tlm_pbsb.cpp` - TLM PBSB 实现
+- `tlmps.cpp` - SWIG 包装代码
+
+**输出**:
+- `base_fun/build/sysc/*.o` - SystemC 对象文件
+
+#### 3. SystemVerilog 编译
+
+```bash
+vlogan -q -full64 -sverilog \
+       +incdir+${UVM_HOME}/src ${UVM_HOME}/src/uvm_pkg.sv \
+       +incdir+${UVMC_HOME}/src/connect/sv ${UVMC_HOME}/src/connect/sv/uvmc_pkg.sv \
+       -timescale=1ns/1ps \
+       +define+UVM_OBJECT_MUST_HAVE_CONSTRUCTOR \
+       +define+UVM_REGEX_NO_DPI \
+       +define+UVMC_NO_COMMANDS \
+       +incdir+../tb \
+       -F ../cfg/rtl.f \
+       ../tb/override_macros.sv \
+       ../tb/tcnt_base_pkg.sv \
+       -F ../cfg/tb.f
+```
+
+**功能**: 编译 SystemVerilog 代码,生成中间表示
+
+**输入**:
+- UVM 库
+- UVMC 的 SystemVerilog 端
+- Rob RTL 和验证环境
+
+**输出**:
+- `base_fun/build/` 中的 SystemVerilog 编译产物
+
+#### 4. VCS 链接
+
+```bash
+vcs -sysc=deltasync -lca \
+    -full64 -sysc -cpp g++ -cc gcc \
+    -timescale=1ns/1ps \
+    -P ${VERDI_HOME}/share/PLI/VCS/LINUX64/novas.tab \
+    ${VERDI_HOME}/share/PLI/VCS/LINUX64/pli.a \
+    -CFLAGS -DVCS ${UVM_HOME}/src/dpi/uvm_dpi.cc \
+    -debug_access+all \
+    -uvm \
+    -o base_fun/PyRob/_tlm_pbsb.so \
+    -e VcsMain sv_main \
+    ${VCS_HOME}/linux64/lib/vcs_tls.o -slave \
+    -Mdir=base_fun/build
+```
+
+**功能**: 链接所有对象文件,生成共享库
+
+**输入**:
+- SystemC 对象文件
+- SystemVerilog 编译产物
+- DPI 层实现
+- Verdi 调试接口
+
+**输出**:
+- `base_fun/PyRob/_tlm_pbsb.so` - 最终的共享库 (95MB)

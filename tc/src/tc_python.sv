@@ -1,5 +1,4 @@
 //=========================================================
-import CSR_in_agent_python_pkg::*;
 //File name    : tc_python.sv
 //Author       : Python-UVM Integration
 //Module name  : tc_python
@@ -36,37 +35,15 @@ function void `TC_NAME::build_phase(uvm_phase phase);
         `uvm_fatal(get_type_name(),$sformatf("virtual interface must be set for vif(tc_if)!!!"))
     end
     
-    // Disable XZ check in traditional CSR_in_agent monitor to avoid X-state errors
-    // during Python-driven simulation
-    uvm_config_db#(bit)::set(this, "env.u_CSR_in_agent.cfg", "xz_sw", 0);
-    
     this.env  =  Rob_env::type_id::create("env", this);
 
     // Configure traditional agents with default sequences
     uvm_config_db#(uvm_object_wrapper)::set(this, "env.u_rename_in_agent.sqr.main_phase"  , "default_sequence", rename_in_agent_default_sequence::type_id::get());
     uvm_config_db#(uvm_object_wrapper)::set(this, "env.u_WriteBack_in_agent.sqr.main_phase"  , "default_sequence", WriteBack_in_agent_default_sequence::type_id::get());
     uvm_config_db#(uvm_object_wrapper)::set(this, "env.u_Redirect_in_agent.sqr.main_phase"  , "default_sequence", Redirect_in_agent_default_sequence::type_id::get());
-    // Note: CSR_in_agent default sequence is disabled for Python integration
-    // uvm_config_db#(uvm_object_wrapper)::set(this, "env.u_CSR_in_agent.sqr.main_phase"  , "default_sequence", CSR_in_agent_default_sequence::type_id::get());
     uvm_config_db#(uvm_object_wrapper)::set(this, "env.u_Mem_in_agent.sqr.main_phase"  , "default_sequence", Mem_in_agent_default_sequence::type_id::get());
     uvm_config_db#(uvm_object_wrapper)::set(this, "env.u_Rob_output_agent.sqr.main_phase"  , "default_sequence", Rob_output_agent_default_sequence::type_id::get());
 
-    // ================================================================
-    // Python-UVM Integration: Configure Python Agent
-    // ================================================================
-    // Override default driver with Python-compatible driver
-    set_type_override_by_type(
-        CSR_in_agent_xaction_xdriver::get_type(), 
-        CSR_in_agent_python_driver::get_type()
-    );
-    
-    // Override default monitor with Python-compatible monitor
-    set_type_override_by_type(
-        CSR_in_agent_xaction_xmonitor::get_type(), 
-        CSR_in_agent_python_monitor::get_type()
-    );
-    
-    `uvm_info("TC_PYTHON", "Python Agent factory overrides configured", UVM_LOW)
 endfunction
 
 function void `TC_NAME::connect_phase(uvm_phase phase);

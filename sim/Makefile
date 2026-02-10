@@ -7,6 +7,8 @@
 
 # Path configuration
 PYTHON_INCLUDE  := $(firstword $(shell python3-config --includes))
+PYTHON_LDFLAGS  := $(shell python3-config --ldflags --embed)
+PYTHON_LIB_DIR  := $(shell python3-config --configdir)
 XSP_COMM_INCLUDE := /home/sfangyy/.local/share/picker/include
 XSP_PYTHON       := /home/sfangyy/.local/share/picker/python
 
@@ -45,14 +47,13 @@ VLOGAN = vlogan -q -full64 -sverilog +incdir+${UVM_HOME}/src ${UVM_HOME}/src/uvm
 
 VCS_ELAB = vcs -sysc=deltasync -lca -full64 -sysc -cpp g++ -cc gcc -timescale=${TIMESCALE} \
            -P ${VERDI_HOME}/share/PLI/VCS/LINUX64/novas.tab ${VERDI_HOME}/share/PLI/VCS/LINUX64/pli.a \
-           -CFLAGS -DVCS ${UVM_HOME}/src/dpi/uvm_dpi.cc -uvm \
+           -CFLAGS "-DVCS ${PYTHON_INCLUDE}" \
+           -LDFLAGS "$(PYTHON_LDFLAGS) -Wl,-rpath,$(PYTHON_LIB_DIR)" \
+           ${UVM_HOME}/src/dpi/uvm_dpi.cc -uvm \
            -o $(LIB_SO) -l $(LOG_DIR)/vcs_elab.log \
            -e VcsMain ${TOP_MODULE} ${VCS_HOME}/linux64/lib/vcs_tls.o -slave -Mdir=${BUILD_DIR}
 
-# Helper for running Python
-PYTHON_EXEC = cd $(OUT_DIR) && LD_PRELOAD=$(CURR_DIR)/$(LIB_SO) python3 -u
-
-.PHONY: all clean compile run test help
+.PHONY: all clean compile run verify example help
 
 all: compile
 
@@ -81,24 +82,29 @@ compile: $(LIB_SO)
 
 # Execution targets
 run: compile
-	@echo ">>> Running Python example (example.py)..."
-	@$(PYTHON_EXEC) example.py
+	@echo ">>> Running pytest for tests/test_dut.py..."
+	@PYTHONPATH=$(OUT_DIR) python3 -m pytest -s tests/test_dut.py
 
-test: compile
-	@echo ">>> Running optimization verification (verify_opt.py)..."
-	@$(PYTHON_EXEC) verify_opt.py
+verify: compile
+	@echo ">>> Running optimization verification (tests/verify_opt.py)..."
+	@PYTHONPATH=$(OUT_DIR) python3 -u tests/verify_opt.py
+
+example: compile
+	@echo ">>> Running Python example (tests/example.py)..."
+	@PYTHONPATH=$(OUT_DIR) python3 -u tests/example.py
 
 clean:
 	@echo "Cleaning build artifacts..."
 	@rm -rf ${BUILD_DIR} ${EXEC_DIR} ${LOG_DIR} ${WAVE_DIR} work csrc simv* AN.DB
 	@rm -rf ${OUT_DIR}/vc_hdrs.h ${PKG_DIR}/ucli.key ${PKG_DIR}/tlm_pbsb.py ${PKG_DIR}/_tlm_pbsb.so*
-	@rm -rf *.log *.log.cmp *.vpd DVE* __pycache__ .vlogan*
+	@rm -rf *.log *.log.cmp *.vpd DVE* __pycache__ .vlogan* _tlm_pbsb.so.daidir
 	@echo "✓ Clean complete."
 
 help:
 	@echo "Available targets:"
 	@echo "  make all     - Build everything"
-	@echo "  make run     - Run Python example (example.py)"
-	@echo "  make test    - Run dirty-check optimization test"
+	@echo "  make run     - Run pytest for DUT"
+	@echo "  make verify  - Run dirty-check optimization test"
+	@echo "  make example - Run Python example (tests/example.py)"
 	@echo "  make clean   - Remove all generated files"
 	@echo "  make help    - Show this message"
